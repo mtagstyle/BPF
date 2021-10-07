@@ -1,28 +1,32 @@
-KERNEL_VERSION=5.4.0-86-generic
-KHEADERS_DIR=/lib/modules/${KERNEL_VERSION}
-INCLUDEDIRS=-I/usr/include/x86_64-linux-gnu
-INC_FLAGS = -nostdinc -isystem `$(CLANG) -print-file-name=include`
-CLANG ?= clang
-LLC ?= llc
-linuxhdrs ?= /usr/src/linux-headers-5.4.0-86
+# include $(BrazilMake.dir)/targets/clean.mk
+# include $(BrazilMake.dir)/std-dirs.mk
 
-LINUXINCLUDE =  -I$(linuxhdrs)/arch/x86/include/uapi \
-                -I$(linuxhdrs)/arch/x86/include/generated/uapi \
-                -I$(linuxhdrs)/include/generated/uapi \
-                -I$(linuxhdrs)/include/uapi \
-                -I$(linuxhdrs)/include
+# brazil.variables += lib.includedirs
 
-OBJS = src/netstat.o
-all: $(OBJS)
+SRC_DIR = src
+BUILD_DIR = build
 
-$(OBJS): %.o:%.c
-	$(CLANG) $(INC_FLAGS) \
-	-D__KERNEL__ -D__ASM_SYSREG_H \
-	-Wno-unused-value -Wno-pointer-sign \
-	-Wno-compare-distinct-pointer-types \
-	-Wno-gnu-variable-sized-type-not-at-end \
-	-Wno-address-of-packed-member -Wno-tautological-compare \
-	-Wno-unknown-warning-option \
-	$(INCLUDEDIRS) \
-	$(LINUXINCLUDE) \
-	$(EXTRA_CFLAGS) -c $< --target=bpf -o $@
+SOURCES = $(wildcard $(SRC_DIR)/*.c)
+HEADERS = $(wildcard $(SRC_DIR)/*.h)
+OBJECTS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SOURCES))
+
+ARCH = $(shell uname -m)-unknown-linux-gnu
+
+CC = $(ARCH)-clang
+CC = clang
+
+CFLAGS = -O2 -target bpf -g -Wall -Werror -Wno-int-to-void-pointer-cast
+CFLAGS += -Ioverride-headers # We need to replace some system headers to avoid x86 ASM getting in
+CFLAGS += $(addprefix -I,$(var.lib.includedirs))
+CFLAGS += -I/usr/include/x86_64-linux-gnu/
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -target bpf -c $< -o $@
+
+release: $(OBJECTS)
+all: release
+
+format:
+	$(ARCH)-clang-format --style=file -i $(SOURCES) $(HEADERS)
+
+.PHONY: release install format all
