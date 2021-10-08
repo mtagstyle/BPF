@@ -3,6 +3,9 @@ BPF Example
 
 To run:
 ```
+git submodule init
+git submodule update
+
 docker build . --tag bpf_example
 
 docker run -itd \
