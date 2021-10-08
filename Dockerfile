@@ -10,6 +10,9 @@ RUN apt-get -y install libz-dev
 RUN apt-get -y install libelf-dev
 RUN apt-get -y install pkg-config
 RUN apt-get -y install git
+RUN apt-get -y install iproute2
+RUN apt-get -y install iputils-ping
+RUN apt-get -y install linux-headers-generic
 
 # bpftool
 WORKDIR /tmp
@@ -28,6 +31,10 @@ mv bpftool /usr/bin && rm -rf /tmp/linux
 COPY vendor /tmp/vendor
 RUN make -C /tmp/vendor/libbpf/src install
 
+RUN ls -al "/usr/src"
+
 COPY example /tmp/example
 RUN make -C /tmp/example
 RUN ls /tmp/example
+
+ENTRYPOINT ["/tmp/example/scripts/load_bpf_prog.sh"]
