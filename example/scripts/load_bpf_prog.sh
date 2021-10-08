@@ -28,17 +28,14 @@ function attach_bpf_program() {
 
 # Follows /sys/kernel/debug/tracing/trace_pipe for any output from the BPF programs
 function listen_output() {
-    ping -I ${IFACE_NAME}_out 1.2.3.4 &
-    PID1=$!
-    ping -I ${IFACE_NAME}_in 4.3.2.1 &
-    PID2=$!
+    python3 ${BASEDIR}/inject_random_udp.py &
+    PID=$!
     cat /sys/kernel/debug/tracing/trace_pipe
 }
 
 function ctrl_c() {
     echo "Cleaning up"
-    kill ${PID1}
-    kill ${PID2}
+    kill ${PID}
 }
 
 trap ctrl_c INT

@@ -10,9 +10,13 @@ RUN apt-get -y install libz-dev
 RUN apt-get -y install libelf-dev
 RUN apt-get -y install pkg-config
 RUN apt-get -y install git
-RUN apt-get -y install iproute2
-RUN apt-get -y install iputils-ping
+
 RUN apt-get -y install linux-headers-generic
+
+# Test stuff
+RUN apt-get -y install python3-pip
+RUN apt-get -y install iproute2
+RUN python3 -m pip install scapy
 
 # bpftool
 WORKDIR /tmp

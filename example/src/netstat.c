@@ -17,25 +17,19 @@
 struct
 {
   __uint(type, BPF_MAP_TYPE_LRU_HASH);
-  __uint(max_entries, 1);
+  __uint(max_entries, 3);
   __type(key, __u32);
   __type(value, __u32);
 } test_map SEC(".maps");
 
 
 /*
- * This updates the test map, which is an LRU cache where the key is the source address, and the value is frequency.
+ * This updates the test map, which is an LRU cache where the key is the source address, and the value is 1.
  */
 __always_inline void update_bpf_map(__be32 saddr)
 {
-    bpf_printk("Writing map shit");
-    __u32 key = saddr; // Intentionally keeping this in network order since it's more readable this way.
-    __u32 *ptr_to_map_val = bpf_map_lookup_elem(&test_map, &key);
-    __u32 new_val = 0;
-
-    if(ptr_to_map_val != NULL) {
-        new_val = *ptr_to_map_val + 1;
-    }
+    __u32 key = __be32_to_cpu(saddr); // Intentionally keeping this in network order since it's more readable this way.
+    __u32 new_val = 1;
 
     bpf_map_update_elem(&test_map, &key, &new_val, 0);
 }
